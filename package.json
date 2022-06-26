@@ -1,6 +1,6 @@
 {
-  "name": "homebridge-accessory-example",
-  "version": "1.0.0",
+  "name": "homebridge-domoticz-thermostat",
+  "version": "0.0.1",
   "description": "An example accessory plugin for homebridge written in Typescript",
   "main": "dist/accessory.js",
   "scripts": {
@@ -24,15 +24,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/homebridge/homebridge-examples.git"
+    "url": "https://github.com/homebridge/homebridge-plugin-template.git"
   },
   "bugs": {
-    "url": "http://github.com/homebridge/homebridge-examples/issues"
+    "url": "https://github.com/homebridge/homebridge-plugin-template/issues"
   },
   "devDependencies": {
     "@types/node": "10.17.19",
     "typescript": "^3.8.3",
     "rimraf": "^3.0.2",
-    "homebridge": "^1.0.4"
+    "homebridge": "^1.0.4",
+    "request": "^2.65.0"
   }
 }
