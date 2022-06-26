@@ -84,8 +84,20 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        log.info("Getting Current Temperature ");
-        callback(undefined, this.CurrentTemperature);
+        log.info("Getting Current Temperature from  http://192.168.2.9/json.htm?type=devices&rid=935");
+        return request.get({
+          url: 'http://192.168.2.9/json.htm?type=devices&rid=935'
+        }, (function (err, response, body) {
+          var json;
+          if (!err && response.statusCode === 200) {
+               log.info('response success');
+              json = JSON.parse(body);
+              log.info('Current Temperature in ℃ is %.2f', json.result[0].Temp);
+              return callback(null, json.result[0].Temp);
+          } else {
+            log.info('Error getting current temp: %s', err);
+          }
+        }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
