@@ -148,11 +148,6 @@ class ThermostatAccessory implements AccessoryPlugin {
             log.info('Error setting target heating stat: %s', err);
           }
         }).bind(this));
-      })
-      .setProps({
-        minValue: Characteristic.TargetHeatingCoolingState.OFF,
-        maxValue: Characteristic.TargetHeatingCoolingState.HEAT,
-        minStep: 1
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)

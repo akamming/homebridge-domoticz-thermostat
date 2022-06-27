@@ -1,0 +1,64 @@
+{
+  "pluginAlias": "DomoticzThermostat",
+  "pluginType": "accessory",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "Example Dynamic Platform"
+      },
+      "ApiAdress": {
+        "title": "apiAdress",
+        "type": "string",
+        "required": true,
+        "default": "http://localhost"
+      },
+      "port": {
+        "title": "port",
+        "type": "number",
+        "required": true,
+        "default": 80
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": false,
+        "default": ""
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": false,
+        "default": ""
+      },
+      "CurrentHeatingCoolingStateIDX": {
+        "title": "IDX of the Current Heating State device in domoticz (selectorswitch, 0=off, 10=HEAT, 20=COOL)",
+        "type": "number",
+        "required": true,
+        "default": 0
+      },
+      "TargetHeatingCoolingStateIDX": {
+        "title": "IDX of the Target Heating State device in domoticz (selectorswitch, 0=off, 10=HEAT, 20=COOL, 30=AUTO)",
+        "type": "number",
+        "required": true,
+        "default": 0
+      },
+      "CurrentTemperatureIDX": {
+        "title": "IDX of the Current Temperature device in domoticz (temperature sensor)",
+        "type": "number",
+        "required": true,
+        "default": 0
+      },
+      "TargetTemperatureIDX": {
+        "title": "IDX of the Target Temperature device in domoticz (thermostat device)",
+        "type": "number",
+        "required": true,
+        "default": 0
+      }
+    }
+  }
+}
