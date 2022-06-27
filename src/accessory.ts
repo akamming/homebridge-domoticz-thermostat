@@ -53,8 +53,10 @@ class ThermostatAccessory implements AccessoryPlugin {
   private readonly name: string;
   private username="";
   private password="";
-  private CurrentHeatingCoolingState=Characteristic.CurrentHeatingCoolingState.OFF;
-  private TargetHeatingCoolingState=Characteristic.TargetHeatingCoolingState.OFF;
+  private hostname="192.168.2.9";
+  private port="80";
+  private CurrentHeatingStateIDX = 984;
+  private TargetHeatingStateIDX = 1003;
   private CurrentTemperatureIDX = 935;
   private TargetTemperatureIDX = 969;
   private TemperatureDisplayUnits = Characteristic.TemperatureDisplayUnits.CELSIUS;
@@ -71,24 +73,91 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        log.info("Getting current heating coooling state ");
-        callback(undefined, this.CurrentHeatingCoolingState);
+        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentHeatingStateIDX;
+        log.info("Getting Current Heating Enabled State from %s",url);
+        return request.get({
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
+          var json;
+          if (!err && response.statusCode === 200) {
+               log.info('response success');
+              json = JSON.parse(body);
+              log.info('Current Heating Status is %s', json.result[0].Status);
+              if (json.result[0].Status=="On"){
+                return callback(null, Characteristic.CurrentHeatingCoolingState.HEAT);
+              } else {
+                return callback(null, Characteristic.CurrentHeatingCoolingState.OFF);
+              }
+          } else {
+            log.info('Error getting current heating state: %s', err);
+          }
+        }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        log.info("Getting target heating coooling state ");
-        callback(undefined, this.TargetHeatingCoolingState);
+        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.TargetHeatingStateIDX;
+        log.info("Getting target  Heating Enabled State from %s",url);
+        return request.get({
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
+          var json;
+          if (!err && response.statusCode === 200) {
+               log.info('response success');
+              json = JSON.parse(body);
+              log.info('Target Heating Status is %s', json.result[0].Status);
+              if (json.result[0].Status=="On"){
+                return callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
+              } else {
+                return callback(null, Characteristic.TargetHeatingCoolingState.OFF);
+              }
+          } else {
+            log.info('Error getting target heating state: %s', err);
+          }
+        }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        this.TargetHeatingCoolingState = value as number;
-        log.info("Target Heating Cooling State was set to: " + this.TargetHeatingCoolingState);
-        callback();
+        log.info ("Value is "+value);
+        var url="";
+        if (value==Characteristic.TargetHeatingCoolingState.HEAT || value==Characteristic.TargetHeatingCoolingState.AUTO) {
+          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
+        } else {
+          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
+        }
+        log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
+        return request.get({
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
+          var json;
+          if (!err && response.statusCode === 200) {
+              log.info('response success');
+              return callback(null);
+          } else {
+            log.info('Error setting target heating stat: %s', err);
+          }
+        }).bind(this));
+      })
+      .setProps({
+        minValue: Characteristic.TargetHeatingCoolingState.OFF,
+        maxValue: Characteristic.TargetHeatingCoolingState.HEAT,
+        minStep: 1
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://192.168.2.9/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
+        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
         log.info("Getting Current Temperature from %s",url);
         return request.get({
           url: url,
@@ -111,7 +180,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://192.168.2.9/json.htm?type=devices&rid="+this.TargetTemperatureIDX
+        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX
         log.info("Getting Target Temperature from %s",url);
         return request.get({
           url: url,
@@ -132,8 +201,23 @@ class ThermostatAccessory implements AccessoryPlugin {
         }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        log.info("Target Temperature set to: " + value);
-        callback();
+        var url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=setsetpoint&idx="+this.TargetTemperatureIDX+"&setpoint="+value;
+        log.info("Target Temperature set to: " + value + ",using url "+url);
+        return request.get({
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
+          var json;
+          if (!err && response.statusCode === 200) {
+              log.info('response success');
+              return callback(null);
+          } else {
+            log.info('Error setting  target temp: %s', err);
+          }
+        }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TemperatureDisplayUnits)
