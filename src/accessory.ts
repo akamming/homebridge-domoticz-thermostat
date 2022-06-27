@@ -130,7 +130,7 @@ class ThermostatAccessory implements AccessoryPlugin {
         if (value==Characteristic.TargetHeatingCoolingState.HEAT || value==Characteristic.TargetHeatingCoolingState.AUTO) {
           url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
         } else {
-          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
+          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
         }
         log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
         return request.get({
