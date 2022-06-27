@@ -11,6 +11,8 @@ import {
   Logging,
   Service,
 } from "homebridge";
+import { IncomingMessage } from "http";
+import { Http2ServerRequest } from "http2";
 
 /*
  * IMPORTANT NOTICE
@@ -49,10 +51,12 @@ class ThermostatAccessory implements AccessoryPlugin {
 
   private readonly log: Logging;
   private readonly name: string;
+  private username="";
+  private password="";
   private CurrentHeatingCoolingState=Characteristic.CurrentHeatingCoolingState.OFF;
   private TargetHeatingCoolingState=Characteristic.TargetHeatingCoolingState.OFF;
-  private CurrentTemperature = 15;
-  private TargetTemperature = 25;
+  private CurrentTemperatureIDX = 935;
+  private TargetTemperatureIDX = 969;
   private TemperatureDisplayUnits = Characteristic.TemperatureDisplayUnits.CELSIUS;
 
   private readonly ThermostatService: Service;
@@ -84,10 +88,15 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        log.info("Getting Current Temperature from  http://192.168.2.9/json.htm?type=devices&rid=935");
+        var url="http://192.168.2.9/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
+        log.info("Getting Current Temperature from %s",url);
         return request.get({
-          url: 'http://192.168.2.9/json.htm?type=devices&rid=935'
-        }, (function (err, response, body) {
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
                log.info('response success');
@@ -95,19 +104,35 @@ class ThermostatAccessory implements AccessoryPlugin {
               log.info('Current Temperature in ℃ is %.2f', json.result[0].Temp);
               return callback(null, json.result[0].Temp);
           } else {
-            log.info('Error getting current temp: %s', err);
+            log.info('Error getting current current temp: %s', err);
           }
         }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        log.info("Getting Target Temperature ");
-        callback(undefined, this.TargetTemperature);
+        var url="http://192.168.2.9/json.htm?type=devices&rid="+this.TargetTemperatureIDX
+        log.info("Getting Target Temperature from %s",url);
+        return request.get({
+          url: url,
+          auth: {
+            user: this.username,
+            pass: this.password
+          }
+        }, (function (err: string, response: IncomingMessage, body: string) {
+          var json;
+          if (!err && response.statusCode === 200) {
+               log.info('response success');
+              json = JSON.parse(body);
+              log.info('Target Temperature in ℃ is %.2f', parseFloat(json.result[0].SetPoint));
+              return callback(null, parseFloat(json.result[0].SetPoint));
+          } else {
+            log.info('Error getting current target temp: %s', err);
+          }
+        }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        this.TargetTemperature = value as number;
-        log.info("Target Temperature set to: " + this.TargetTemperature);
+        log.info("Target Temperature set to: " + value);
         callback();
       });
 
