@@ -10,7 +10,7 @@
     "postpublish": "npm run clean",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Andreas Bauer <mail@anderl-bauer.de>",
+  "author": "Arnold Kamminga <arnold.kamminga@hotmail.com>",
   "engines": {
     "homebridge": ">=1.0.0"
   },

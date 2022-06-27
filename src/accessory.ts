@@ -9,6 +9,7 @@ import {
   CharacteristicValue,
   HAP,
   Logging,
+  PlatformConfig,
   Service,
 } from "homebridge";
 import { IncomingMessage } from "http";
@@ -53,12 +54,12 @@ class ThermostatAccessory implements AccessoryPlugin {
   private readonly name: string;
   private username="";
   private password="";
-  private hostname="192.168.2.9";
-  private port="80";
-  private CurrentHeatingStateIDX = 984;
-  private TargetHeatingStateIDX = 1003;
-  private CurrentTemperatureIDX = 935;
-  private TargetTemperatureIDX = 969;
+  private ApiAddress="";
+  private port="";
+  private CurrentHeatingStateIDX = 0;
+  private TargetHeatingStateIDX = 0; 
+  private CurrentTemperatureIDX = 0; 
+  private TargetTemperatureIDX = 0; 
   private TemperatureDisplayUnits = Characteristic.TemperatureDisplayUnits.CELSIUS;
 
   private readonly ThermostatService: Service;
@@ -68,12 +69,25 @@ class ThermostatAccessory implements AccessoryPlugin {
   constructor(log: Logging, config: AccessoryConfig, api: API) {
     this.log = log;
     this.name = config.name;
+    this.ApiAddress = config.ApiAddress;
+    this.port=config.port;
+    if (config.username){
+      this.username=config.username;
+    }
+    if (config.password) {
+      this.password=config.password;
+    }
+    this.CurrentHeatingStateIDX=config.CurrentHeatingCoolingStateIDX;
+    this.TargetHeatingStateIDX=config.TargetHeatingCoolingStateIDX;
+    this.CurrentTemperatureIDX=config.CurrentTemperatureIDX;
+    this.TargetTemperatureIDX=config.TargetTemperatureIDX;
+    log.info("config = "+JSON.stringify(config));
 
     this.ThermostatService = new hap.Service.Thermostat(this.name);
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentHeatingStateIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentHeatingStateIDX;
         log.info("Getting Current Heating Enabled State from %s",url);
         return request.get({
           url: url,
@@ -100,7 +114,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.TargetHeatingStateIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetHeatingStateIDX;
         log.info("Getting target  Heating Enabled State from %s",url);
         return request.get({
           url: url,
@@ -128,9 +142,9 @@ class ThermostatAccessory implements AccessoryPlugin {
         log.info ("Value is "+value);
         var url="";
         if (value==Characteristic.TargetHeatingCoolingState.HEAT || value==Characteristic.TargetHeatingCoolingState.AUTO) {
-          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
+          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
         } else {
-          url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
+          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
         }
         log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
         return request.get({
@@ -152,7 +166,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
         log.info("Getting Current Temperature from %s",url);
         return request.get({
           url: url,
@@ -175,7 +189,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url="http://"+this.hostname+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX
         log.info("Getting Target Temperature from %s",url);
         return request.get({
           url: url,
@@ -196,7 +210,7 @@ class ThermostatAccessory implements AccessoryPlugin {
         }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        var url = "http://"+this.hostname+":"+this.port+"/json.htm?type=command&param=setsetpoint&idx="+this.TargetTemperatureIDX+"&setpoint="+value;
+        var url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=setsetpoint&idx="+this.TargetTemperatureIDX+"&setpoint="+value;
         log.info("Target Temperature set to: " + value + ",using url "+url);
         return request.get({
           url: url,
