@@ -1,6 +1,6 @@
 {
   "name": "homebridge-domoticz-thermostat",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Simple accessory plugin which create a home setpoint using 4 domoticz devices. Be aware this is a very early version",
   "main": "dist/accessory.js",
   "scripts": {
