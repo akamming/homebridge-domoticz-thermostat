@@ -11,8 +11,8 @@
         "required": true,
         "default": "Example Dynamic Platform"
       },
-      "ApiAdress": {
-        "title": "apiAdress",
+      "ApiAddress": {
+        "title": "apiAddress",
         "type": "string",
         "required": true,
         "default": "http://localhost"
