@@ -2,7 +2,6 @@ import {
   AccessoryConfig,
   AccessoryPlugin,
   API,
-  Characteristic,
   CharacteristicEventTypes,
   CharacteristicGetCallback,
   CharacteristicSetCallback,
@@ -10,6 +9,7 @@ import {
   HAP,
   Logging,
   PlatformConfig,
+  PrimitiveTypes,
   Service,
 } from "homebridge";
 import { IncomingMessage } from "http";
@@ -39,7 +39,7 @@ import { Http2ServerRequest } from "http2";
  */
 let hap: HAP;
 var request = require('request');
-
+// var Characteristic: { CurrentHeatingCoolingState: { OFF: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; HEAT: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; COOL: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; TargetHeatingCoolingState: { OFF: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; HEAT: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; COOL: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; AUTO: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; TemperatureDisplayUnits: { CELSIUS: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; };
 /*
  * Initializer function called when the plugin is loaded.
  */
@@ -60,7 +60,6 @@ class ThermostatAccessory implements AccessoryPlugin {
   private TargetHeatingStateIDX = 0; 
   private CurrentTemperatureIDX = 0; 
   private TargetTemperatureIDX = 0; 
-  private TemperatureDisplayUnits = Characteristic.TemperatureDisplayUnits.CELSIUS;
 
   private readonly ThermostatService: Service;
   private readonly informationService: Service;
@@ -102,11 +101,11 @@ class ThermostatAccessory implements AccessoryPlugin {
               json = JSON.parse(body);
               log.info('Current Heating Status is %d', json.result[0].Level);
               if (json.result[0].Level==0){
-                return callback(null, Characteristic.CurrentHeatingCoolingState.OFF);
+                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.OFF);
               } else if (json.result[0].Level==10) {
-                return callback(null, Characteristic.CurrentHeatingCoolingState.HEAT);
+                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.HEAT);
               } else if (json.result[0].Level==20) {
-                return callback(null, Characteristic.CurrentHeatingCoolingState.COOL);
+                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.COOL);
               } else {
                 log.info("Error: unknown currentheatingcoolingstate");
               }
@@ -133,13 +132,13 @@ class ThermostatAccessory implements AccessoryPlugin {
               json = JSON.parse(body);
               log.info('Target Heating Status is %d', json.result[0].Level);
               if (json.result[0].Level==0){
-                return callback(null, Characteristic.TargetHeatingCoolingState.OFF);
+                return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
               } else if (json.result[0].Level==10){
-                return callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
+                return callback(null, hap.Characteristic.TargetHeatingCoolingState.HEAT);
               } else  if (json.result[0].Level==20){
-                return callback(null, Characteristic.TargetHeatingCoolingState.COOL);
+                return callback(null, hap.Characteristic.TargetHeatingCoolingState.COOL);
               } else  if (json.result[0].Level==30){
-                return callback(null, Characteristic.TargetHeatingCoolingState.AUTO);
+                return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
               } else {
                 log.info("Error: Unknown Target HeatingCooling State")
               }
@@ -151,13 +150,13 @@ class ThermostatAccessory implements AccessoryPlugin {
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
         log.info ("Value is "+value);
         var url="";
-        if (value==Characteristic.TargetHeatingCoolingState.OFF) {
+        if (value==hap.Characteristic.TargetHeatingCoolingState.OFF) {
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
-        } else if (value==Characteristic.TargetHeatingCoolingState.HEAT){
+        } else if (value==hap.Characteristic.TargetHeatingCoolingState.HEAT){
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=10";
-        } else if (value==Characteristic.TargetHeatingCoolingState.COOL){
+        } else if (value==hap.Characteristic.TargetHeatingCoolingState.COOL){
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=20";
-        } else if (value==Characteristic.TargetHeatingCoolingState.AUTO){
+        } else if (value==hap.Characteristic.TargetHeatingCoolingState.AUTO){
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=30";
         }
         log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
@@ -246,11 +245,10 @@ class ThermostatAccessory implements AccessoryPlugin {
       this.ThermostatService.getCharacteristic(hap.Characteristic.TemperatureDisplayUnits)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
         log.info("Getting Temperature Display Units ");
-        callback(undefined, this.TemperatureDisplayUnits);
+        callback(null, hap.Characteristic.TemperatureDisplayUnits.CELSIUS);
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        this.TemperatureDisplayUnits = value as number;
-        log.info("Temperature Display Units was set to: " + this.TemperatureDisplayUnits);
+        log.info("Temperature Display Units was set to: " + value);
         callback();
       });
 
