@@ -1,7 +1,7 @@
 {
   "name": "homebridge-domoticz-thermostat",
   "version": "0.0.1",
-  "description": "An example accessory plugin for homebridge written in Typescript",
+  "description": "Simple accessory plugin which create a home setpoint using 4 domoticz devices. Be aware this is a very early version",
   "main": "dist/accessory.js",
   "scripts": {
     "clean": "rimraf ./dist",
