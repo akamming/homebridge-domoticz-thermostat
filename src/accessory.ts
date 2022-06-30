@@ -100,11 +100,15 @@ class ThermostatAccessory implements AccessoryPlugin {
           if (!err && response.statusCode === 200) {
                log.info('response success');
               json = JSON.parse(body);
-              log.info('Current Heating Status is %s', json.result[0].Status);
-              if (json.result[0].Status=="On"){
-                return callback(null, Characteristic.CurrentHeatingCoolingState.HEAT);
-              } else {
+              log.info('Current Heating Status is %d', json.result[0].Level);
+              if (json.result[0].Level==0){
                 return callback(null, Characteristic.CurrentHeatingCoolingState.OFF);
+              } else if (json.result[0].Level==10) {
+                return callback(null, Characteristic.CurrentHeatingCoolingState.HEAT);
+              } else if (json.result[0].Level==20) {
+                return callback(null, Characteristic.CurrentHeatingCoolingState.COOL);
+              } else {
+                log.info("Error: unknown currentheatingcoolingstate");
               }
           } else {
             log.info('Error getting current heating state: %s', err);
@@ -127,11 +131,17 @@ class ThermostatAccessory implements AccessoryPlugin {
           if (!err && response.statusCode === 200) {
                log.info('response success');
               json = JSON.parse(body);
-              log.info('Target Heating Status is %s', json.result[0].Status);
-              if (json.result[0].Status=="On"){
-                return callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
-              } else {
+              log.info('Target Heating Status is %d', json.result[0].Level);
+              if (json.result[0].Level==0){
                 return callback(null, Characteristic.TargetHeatingCoolingState.OFF);
+              } else if (json.result[0].Level==10){
+                return callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
+              } else  if (json.result[0].Level==20){
+                return callback(null, Characteristic.TargetHeatingCoolingState.COOL);
+              } else  if (json.result[0].Level==30){
+                return callback(null, Characteristic.TargetHeatingCoolingState.AUTO);
+              } else {
+                log.info("Error: Unknown Target HeatingCooling State")
               }
           } else {
             log.info('Error getting target heating state: %s', err);
@@ -141,10 +151,14 @@ class ThermostatAccessory implements AccessoryPlugin {
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
         log.info ("Value is "+value);
         var url="";
-        if (value==Characteristic.TargetHeatingCoolingState.HEAT || value==Characteristic.TargetHeatingCoolingState.AUTO) {
-          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=On";
-        } else {
+        if (value==Characteristic.TargetHeatingCoolingState.OFF) {
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
+        } else if (value==Characteristic.TargetHeatingCoolingState.HEAT){
+          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=10";
+        } else if (value==Characteristic.TargetHeatingCoolingState.COOL){
+          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=20";
+        } else if (value==Characteristic.TargetHeatingCoolingState.AUTO){
+          url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=30";
         }
         log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
         return request.get({
