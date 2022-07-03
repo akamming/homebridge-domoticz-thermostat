@@ -80,14 +80,12 @@ class ThermostatAccessory implements AccessoryPlugin {
     this.TargetHeatingStateIDX=config.TargetHeatingCoolingStateIDX;
     this.CurrentTemperatureIDX=config.CurrentTemperatureIDX;
     this.TargetTemperatureIDX=config.TargetTemperatureIDX;
-    //log.info("config = "+JSON.stringify(config));
 
     this.ThermostatService = new hap.Service.Thermostat(this.name);
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentHeatingStateIDX;
-        //log.info("Getting Current Heating Enabled State from %s",url);
         return request.get({
           url: url,
           auth: {
@@ -96,21 +94,31 @@ class ThermostatAccessory implements AccessoryPlugin {
           }
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
-          if (!err && response.statusCode === 200) {
-              // log.info('response success');
-              json = JSON.parse(body);
-              // log.info('Current Heating Status is %d', json.result[0].Level);
-              if (json.result[0].Level==0){
-                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.OFF);
-              } else if (json.result[0].Level==10) {
-                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.HEAT);
-              } else if (json.result[0].Level==20) {
-                return callback(null, hap.Characteristic.CurrentHeatingCoolingState.COOL);
-              } else {
-                log.info("Error: unknown currentheatingcoolingstate");
+          if (!err) {
+            if (response.statusCode==200) {
+              try {
+                json = JSON.parse(body);
+                if (json.result[0].Level==0){
+                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.OFF);
+                } else if (json.result[0].Level==10) {
+                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.HEAT);
+                } else if (json.result[0].Level==20) {
+                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.COOL);
+                } else {
+                  log.error("Error: unknown currentheatingcoolingstate");
+                  callback(new Error('unknown current heating cooling state'));
+                }
+              } catch(err) {
+                log.error("Error getting Current Heating Cooling State from "+url+" (" + err+ "), check your domoticz switch configuration")
+                callback(new Error('invalid response from domoticz'));
               }
+            } else {
+              log.error("Error: Domoticz returned statuscode "+response.statusCode)
+              callback(new Error('domoticz returned statuscode '+response.statusCode+'on '+url));
+            }
           } else {
-            log.info('Error getting current heating state: %s', err);
+            log.error('Error getting current heating state: '+err);
+            callback(new Error(' Error getting current heating state on '+url+', error: '+err));
           }
         }).bind(this));
       });
@@ -118,7 +126,6 @@ class ThermostatAccessory implements AccessoryPlugin {
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetHeatingStateIDX;
-        //log.info("Getting target  Heating Enabled State from %s",url);
         return request.get({
           url: url,
           auth: {
@@ -127,10 +134,9 @@ class ThermostatAccessory implements AccessoryPlugin {
           }
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
-          if (!err && response.statusCode === 200) {
-              //log.info('response success');
+          if (!err) {
+            if (response.statusCode === 200) {
               json = JSON.parse(body);
-              //log.info('Target Heating Status is %d', json.result[0].Level);
               if (json.result[0].Level==0){
                 return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
               } else if (json.result[0].Level==10){
@@ -140,15 +146,20 @@ class ThermostatAccessory implements AccessoryPlugin {
               } else  if (json.result[0].Level==30){
                 return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
               } else {
-                log.info("Error: Unknown Target HeatingCooling State")
+                log.error("Error: Unknown Target HeatingCooling State, check you domoticz switch configuration")
+                callback(new Error('Error: unknown Target Heating Cooling State'))
               }
+            } else {
+              log.error("invalid reponse code: "+response.statusCode+", on "+url)
+              callback(new Error('Invalid domoticz respons'))
+            }
           } else {
-            log.info('Error getting target heating state: %s', err);
+            log.error('Error getting target heating state: ' + err);
+            callback(new Error('Error getting target heating state: '+err));
           }
         }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        //log.info ("Value is "+value);
         var url="";
         if (value==hap.Characteristic.TargetHeatingCoolingState.OFF) {
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
@@ -159,7 +170,6 @@ class ThermostatAccessory implements AccessoryPlugin {
         } else if (value==hap.Characteristic.TargetHeatingCoolingState.AUTO){
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=30";
         }
-        //log.info("Target Target Heating Cooling State set to : " + value + ",using url "+url);
         return request.get({
           url: url,
           auth: {
@@ -168,11 +178,16 @@ class ThermostatAccessory implements AccessoryPlugin {
           }
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
-          if (!err && response.statusCode === 200) {
-              //log.info('response success');
-              return callback(null);
+          if (!err) {
+            if (response.statusCode === 200) {
+                return callback(null);
+            } else {
+              log.error('Invalid status code '+response.statusCode+' on '+url);
+              callback (new Error('Invalid statuscode'))
+            }
           } else {
-            log.info('Error setting target heating stat: %s', err);
+            log.error('Error setting target heating stat: %s', err);
+            callback(new Error('Error setting target heating state '+err))
           }
         }).bind(this));
       });
@@ -180,7 +195,6 @@ class ThermostatAccessory implements AccessoryPlugin {
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
-        //log.info("Getting Current Temperature from %s",url);
         return request.get({
           url: url,
           auth: {
@@ -190,20 +204,18 @@ class ThermostatAccessory implements AccessoryPlugin {
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
-              //log.info('response success');
               json = JSON.parse(body);
-              //log.info('Current Temperature in ℃ is %.2f', json.result[0].Temp);
               return callback(null, json.result[0].Temp);
           } else {
-            log.info('Error getting current current temp: %s', err);
+            log.error('Error getting current current temp: '+err);
+            callback(new Error('Error getting current temp: '+err))
           }
         }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX
-        //log.info("Getting Target Temperature from %s",url);
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX;
         return request.get({
           url: url,
           auth: {
@@ -213,18 +225,16 @@ class ThermostatAccessory implements AccessoryPlugin {
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
-              //log.info('response success');
               json = JSON.parse(body);
-              //log.info('Target Temperature in ℃ is %.2f', parseFloat(json.result[0].SetPoint));
-              return callback(null, parseFloat(json.result[0].SetPoint));
+             return callback(null, parseFloat(json.result[0].SetPoint));
           } else {
-            log.info('Error getting current target temp: %s', err);
+            log.error('Error getting current target temp: '+err);
+            callback(new Error(' Error getting target temp: '+err))
           }
         }).bind(this));
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
         var url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=setsetpoint&idx="+this.TargetTemperatureIDX+"&setpoint="+value;
-        //log.info("Target Temperature set to: " + value + ",using url "+url);
         return request.get({
           url: url,
           auth: {
@@ -234,27 +244,24 @@ class ThermostatAccessory implements AccessoryPlugin {
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
-              log.info('response success');
               return callback(null);
           } else {
-            log.info('Error setting  target temp: %s', err);
+            log.error('Error setting  target temp: %s', err);
           }
         }).bind(this));
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TemperatureDisplayUnits)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        //log.info("Getting Temperature Display Units ");
         callback(null, hap.Characteristic.TemperatureDisplayUnits.CELSIUS);
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        //log.info("Temperature Display Units was set to: " + value);
         callback();
       });
 
       this.informationService = new hap.Service.AccessoryInformation()
-      .setCharacteristic(hap.Characteristic.Manufacturer, "Custom Manufacturer")
-      .setCharacteristic(hap.Characteristic.Model, "Custom Model");
+      .setCharacteristic(hap.Characteristic.Manufacturer, "Domoticz")
+      .setCharacteristic(hap.Characteristic.Model, "Thermostat");
 
     log.info("Domoticz Thermostat finished initializing!");
   }
