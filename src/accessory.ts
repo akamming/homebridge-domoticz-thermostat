@@ -109,7 +109,7 @@ class ThermostatAccessory implements AccessoryPlugin {
                   callback(new Error('unknown current heating cooling state'));
                 }
               } catch(err) {
-                log.error("Error getting Current Heating Cooling State from "+url+" (" + err+ "), check your domoticz switch configuration")
+                log.error("Error reading domoticz response "+url+" (" + err+ "), is this a valid domotixz selector switch?")
                 callback(new Error('invalid response from domoticz'));
               }
             } else {
@@ -136,18 +136,23 @@ class ThermostatAccessory implements AccessoryPlugin {
           var json;
           if (!err) {
             if (response.statusCode === 200) {
-              json = JSON.parse(body);
-              if (json.result[0].Level==0){
-                return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
-              } else if (json.result[0].Level==10){
-                return callback(null, hap.Characteristic.TargetHeatingCoolingState.HEAT);
-              } else  if (json.result[0].Level==20){
-                return callback(null, hap.Characteristic.TargetHeatingCoolingState.COOL);
-              } else  if (json.result[0].Level==30){
-                return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
-              } else {
-                log.error("Error: Unknown Target HeatingCooling State, check you domoticz switch configuration")
-                callback(new Error('Error: unknown Target Heating Cooling State'))
+              try {
+                json = JSON.parse(body);
+                if (json.result[0].Level==0){
+                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
+                } else if (json.result[0].Level==10){
+                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.HEAT);
+                } else  if (json.result[0].Level==20){
+                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.COOL);
+                } else  if (json.result[0].Level==30){
+                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
+                } else {
+                  log.error("Error: Unknown Target HeatingCooling State, check you domoticz switch configuration")
+                  callback(new Error('Error: unknown Target Heating Cooling State'))
+                }
+              } catch (err) {
+                log.error("Invalid domoticz reponse readomg Target Heating Cooling state: "+err+", is there a valid Domoticz selector switch at "+url+"?");
+                callback(new Error('Invalid response'));
               }
             } else {
               log.error("invalid reponse code: "+response.statusCode+", on "+url)
@@ -186,7 +191,7 @@ class ThermostatAccessory implements AccessoryPlugin {
               callback (new Error('Invalid statuscode'))
             }
           } else {
-            log.error('Error setting target heating stat: %s', err);
+            log.error('Error setting target heating state: %s', err);
             callback(new Error('Error setting target heating state '+err))
           }
         }).bind(this));
@@ -204,8 +209,13 @@ class ThermostatAccessory implements AccessoryPlugin {
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
-              json = JSON.parse(body);
-              return callback(null, json.result[0].Temp);
+              try {
+                json = JSON.parse(body);
+                return callback(null, json.result[0].Temp);
+              } catch(err) {
+                log.error("Invalid response reading current temperature: "+err+", is there a valid temperature domoticz sensor at "+url+"?");
+                callback(new Error("invalid response"));
+              }
           } else {
             log.error('Error getting current current temp: '+err);
             callback(new Error('Error getting current temp: '+err))
@@ -225,8 +235,13 @@ class ThermostatAccessory implements AccessoryPlugin {
         }, (function (err: string, response: IncomingMessage, body: string) {
           var json;
           if (!err && response.statusCode === 200) {
+            try {
               json = JSON.parse(body);
              return callback(null, parseFloat(json.result[0].SetPoint));
+            } catch (err) {
+              log.error("Invalid response reading target temp from domoticz: "+err+", is there a valid demoticz setpoint device at "+url+"?");
+              callback(new Error("invalid response"));
+            }
           } else {
             log.error('Error getting current target temp: '+err);
             callback(new Error(' Error getting target temp: '+err))
@@ -247,6 +262,7 @@ class ThermostatAccessory implements AccessoryPlugin {
               return callback(null);
           } else {
             log.error('Error setting  target temp: %s', err);
+            callback(new Error("error"));
           }
         }).bind(this));
       });
