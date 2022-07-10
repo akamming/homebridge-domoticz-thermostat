@@ -9,7 +9,7 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "DomoticzThermostat"
       },
       "ApiAddress": {
         "title": "apiAddress",
@@ -46,6 +46,17 @@
         "type": "number",
         "required": true,
         "default": 0
+      },
+      "TargetHeatingCoolingStateMaxValue": {
+        "title": "Max Value of Target Heating State (determines type of thermostat)",
+        "type": "string",
+        "default": "HEAT",
+        "oneOf": [
+          { "title": "HEAT", "enum": ["HEAT"]},
+          { "title": "COOL", "enum": ["COOL"]},
+          { "title": "AUTO", "enum": ["AUTO"]}
+        ],
+        "required": true
       },
       "CurrentTemperatureIDX": {
         "title": "IDX of the Current Temperature device in domoticz (temperature sensor)",
