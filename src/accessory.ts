@@ -2,6 +2,7 @@ import {
   AccessoryConfig,
   AccessoryPlugin,
   API,
+  Characteristic,
   CharacteristicEventTypes,
   CharacteristicGetCallback,
   CharacteristicSetCallback,
@@ -60,6 +61,7 @@ class ThermostatAccessory implements AccessoryPlugin {
   private TargetHeatingStateIDX = 0; 
   private CurrentTemperatureIDX = 0; 
   private TargetTemperatureIDX = 0; 
+  private TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
 
   private readonly ThermostatService: Service;
   private readonly informationService: Service;
@@ -80,7 +82,18 @@ class ThermostatAccessory implements AccessoryPlugin {
     this.TargetHeatingStateIDX=config.TargetHeatingCoolingStateIDX;
     this.CurrentTemperatureIDX=config.CurrentTemperatureIDX;
     this.TargetTemperatureIDX=config.TargetTemperatureIDX;
+    if (config.TargetHeatingCoolingStateMaxValue=="HEAT") {
+      this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
+    } else if (config.TargetHeatingCoolingStateMaxValue=="COOL") {
+      this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.COOL;
+    } else if (config.TargetHeatingCoolingStateMaxValue=="AUTO") {
+      this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.AUTO;
+    } else {
+      this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
+    }
 
+    log.info("Target Heating Cooling State Max Value is "+this.TargetHeatingCoolingStateMaxValue);
+ 
     this.ThermostatService = new hap.Service.Thermostat(this.name);
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
@@ -195,6 +208,9 @@ class ThermostatAccessory implements AccessoryPlugin {
             callback(new Error('Error setting target heating state '+err))
           }
         }).bind(this));
+      }).setProps({
+        minValue: hap.Characteristic.TargetHeatingCoolingState.OFF,
+        maxValue: this.TargetHeatingCoolingStateMaxValue
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
