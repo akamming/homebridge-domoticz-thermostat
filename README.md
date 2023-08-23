@@ -12,7 +12,7 @@ this plugin gets the status from 4 domoticz devices and publishes this as 1 ther
 
 ## how to install
 
-### requsites
+### requisites
 This plugin requires domoticz 2023.2 or higher
 
 ### configure domoticz (if you use the plugin above, it will create these devices. But if you have any other system):
