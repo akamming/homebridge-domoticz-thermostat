@@ -12,6 +12,9 @@ this plugin gets the status from 4 domoticz devices and publishes this as 1 ther
 
 ## how to install
 
+### requsites
+This plugin requires domoticz 2023.2 or higher
+
 ### configure domoticz (if you use the plugin above, it will create these devices. But if you have any other system):
 Make sure you have 4 devices in domoticz representing your heating/cooling system:
 - a setpoint device stating the target room temperature
@@ -28,7 +31,7 @@ Make sure you have 4 devices in domoticz representing your heating/cooling syste
 - go to the plugins tab
 - in the search bar: enter "domoticz thermostat"  and press enter
 - install this plugin (it is called Homebridge-Domoticz-Thermostat)
-- Enter your domoticz api adress and port, and the 4 device numbers of the domoticz devices mentioned above
+- Enter your domoticz api adress and port, a domoticz user and password and the 4 device numbers of the domoticz devices mentioned above
 - Restart homebridge
 
 And you are in business!!
