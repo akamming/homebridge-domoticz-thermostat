@@ -98,7 +98,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentHeatingStateIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.CurrentHeatingStateIDX;
         return request.get({
           url: url,
           auth: {
@@ -138,7 +138,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetHeatingStateIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.TargetHeatingStateIDX;
         return request.get({
           url: url,
           auth: {
@@ -215,7 +215,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.CurrentTemperatureIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.CurrentTemperatureIDX;
         return request.get({
           url: url,
           auth: {
@@ -241,7 +241,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=devices&rid="+this.TargetTemperatureIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.TargetTemperatureIDX;
         return request.get({
           url: url,
           auth: {
