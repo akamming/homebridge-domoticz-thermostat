@@ -36,7 +36,7 @@ Make sure you have 4 devices in domoticz representing your heating/cooling syste
 And you are in business!!
 
 ### advanced
-- If you want several instances: this can be achieved by enabling the [childbridge functionality](the childbridge functionality) andthen  manually confguring the json, e.g. :
+- If you want several instances: this can be achieved by enabling the [childbridge feature of homebridge](https://github.com/homebridge/homebridge/wiki/Child-Bridges) and then  manually configure multiple thermostats directly in the json, e.g. :
 ```
 "accessories": [
         {
