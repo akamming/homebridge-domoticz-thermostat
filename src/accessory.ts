@@ -91,14 +91,19 @@ class ThermostatAccessory implements AccessoryPlugin {
     } else {
       this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
     }
-
+    this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
     log.info("Target Heating Cooling State Max Value is "+this.TargetHeatingCoolingStateMaxValue);
  
     this.ThermostatService = new hap.Service.Thermostat(this.name);
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.CurrentHeatingStateIDX;
+        var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid=";
+        if (this.CurrentHeatingStateIDX==undefined || this.CurrentHeatingStateIDX==0) {
+          url+=+this.TargetHeatingStateIDX
+        } else {
+          url+=+this.CurrentHeatingStateIDX
+        }
         return request.get({
           url: url,
           auth: {

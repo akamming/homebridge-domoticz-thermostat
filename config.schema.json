@@ -36,13 +36,13 @@
         "default": ""
       },
       "CurrentHeatingCoolingStateIDX": {
-        "title": "IDX of the Current Heating State device in domoticz (selectorswitch, 0=off, 10=HEAT, 20=COOL)",
+        "title": "IDX of the Current Heating State device in domoticz (empty or 0 of you don't have this device)",
         "type": "number",
-        "required": true,
+        "required": false,
         "default": 0
       },
       "TargetHeatingCoolingStateIDX": {
-        "title": "IDX of the Target Heating State device in domoticz (selectorswitch, 0=off, 10=HEAT, 20=COOL, 30=AUTO)",
+        "title": "IDX of the Target Heating State device in domoticz (should be a selectorswitch of type 0=off, 10=HEAT, 20=COOL, 30=AUTO)",
         "type": "number",
         "required": true,
         "default": 0
