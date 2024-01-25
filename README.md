@@ -33,10 +33,12 @@ Make sure you have 4 devices in domoticz representing your heating/cooling syste
 - install this plugin (it is called Homebridge-Domoticz-Thermostat)
 - Enter your domoticz api adress and port, a domoticz user and password and the 4 device numbers of the domoticz devices mentioned above
 - Restart homebridge
+And you are in business!!
 
 ### advanced
-- If you want several instances: this can be achied by using the [childbridge functionality](the childbridge functionality). and manually confguring the json config e.g.:
- "accessories": [
+- If you want several instances: this can be achieved by enabling the [childbridge functionality](the childbridge functionality) andthen  manually confguring the json, e.g. :
+```
+"accessories": [
         {
             "name": "DomoticzThermostat",
             "ApiAddress": "https://xxx.yyy.zzz.aaa",
@@ -71,5 +73,5 @@ Make sure you have 4 devices in domoticz representing your heating/cooling syste
             }
         }
     ],
-
-And you are in business!!
+```
+(make sure both have the same "username")
