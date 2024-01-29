@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import {
   AccessoryConfig,
   AccessoryPlugin,
@@ -40,6 +41,9 @@ import { Http2ServerRequest } from "http2";
  */
 let hap: HAP;
 var request = require('request');
+var axios = require('axios');
+var btoa = require('btoa')
+
 // var Characteristic: { CurrentHeatingCoolingState: { OFF: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; HEAT: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; COOL: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; TargetHeatingCoolingState: { OFF: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; HEAT: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; COOL: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; AUTO: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; TemperatureDisplayUnits: { CELSIUS: string | number | boolean | PrimitiveTypes[] | { [key: string]: PrimitiveTypes; } | null | undefined; }; };
 /*
  * Initializer function called when the plugin is loaded.
@@ -68,6 +72,18 @@ class ThermostatAccessory implements AccessoryPlugin {
 
 
   constructor(log: Logging, config: AccessoryConfig, api: API) {
+
+    // interface for reading devices
+    interface Device{
+      [index: number]: { Level: Number, HardwareName: string }
+    };
+
+    interface Response {
+      status: string;
+      title: string;
+      result: Device
+    };
+
     this.log = log;
     this.name = config.name;
     this.ApiAddress = config.ApiAddress;
@@ -98,47 +114,41 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid=";
         if (this.CurrentHeatingStateIDX==undefined || this.CurrentHeatingStateIDX==0) {
           url+=+this.TargetHeatingStateIDX
         } else {
           url+=+this.CurrentHeatingStateIDX
         }
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
+
+        const options = {
+          headers: {
+            Authorization: 'Basic '+btoa(this.username+':'+this.password),
           }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err) {
-            if (response.statusCode==200) {
-              try {
-                json = JSON.parse(body);
-                if (json.result[0].Level==0){
-                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.OFF);
-                } else if (json.result[0].Level==10) {
-                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.HEAT);
-                } else if (json.result[0].Level==20) {
-                  return callback(null, hap.Characteristic.CurrentHeatingCoolingState.COOL);
-                } else {
-                  log.error("Error: unknown currentheatingcoolingstate");
-                  callback(new Error('unknown current heating cooling state'));
-                }
-              } catch(err) {
-                log.error("Error reading domoticz response "+url+" (" + err+ "), is this a valid domotixz selector switch?")
-                callback(new Error('invalid response from domoticz'));
-              }
+        };
+
+        axios
+          .get(url,options)
+          .then(function ({ data }: { data: Response }) {
+            if (data.result[0].Level==0){
+              return callback(null, hap.Characteristic.CurrentHeatingCoolingState.OFF);
+            } else if (data.result[0].Level==10) {
+              return callback(null, hap.Characteristic.CurrentHeatingCoolingState.HEAT);
+            } else if (data.result[0].Level==20) {
+              return callback(null, hap.Characteristic.CurrentHeatingCoolingState.COOL);
             } else {
-              log.error("Error: Domoticz returned statuscode "+response.statusCode)
-              callback(new Error('domoticz returned statuscode '+response.statusCode+'on '+url));
-            }
-          } else {
-            log.error('Error getting current heating state: '+err);
-            callback(new Error(' Error getting current heating state on '+url+', error: '+err));
-          }
-        }).bind(this));
+              log.error("Error: unknown currentheatingcoolingstate");
+              callback(new Error('unknown current heating cooling state'));
+            } 
+          })
+          .catch(function (error: any) {
+            log.error("Error getting current heatings state on "+url)
+            log.error(error.response.data);
+            log.error(error.response.status);
+            log.error(error.response.headers);
+            return callback(new Error('Error getting current heating state on '+url))
+          });
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
