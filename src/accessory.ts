@@ -1,4 +1,3 @@
-import { AxiosResponse } from "axios";
 import {
   AccessoryConfig,
   AccessoryPlugin,
@@ -15,7 +14,8 @@ import {
   Service,
 } from "homebridge";
 import { IncomingMessage } from "http";
-import { Http2ServerRequest } from "http2";
+// import { Http2ServerRequest } from "http2";
+import { AxiosResponse } from "axios";
 
 /*
  * IMPORTANT NOTICE
@@ -75,7 +75,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     // interface for reading devices
     interface Device{
-      [index: number]: { Level: Number, HardwareName: string, Temp: Number }
+      [index: number]: { Level: Number, HardwareName: string, Temp: Number, SetPoint: Number }
     };
 
     interface Response {
@@ -220,7 +220,6 @@ class ThermostatAccessory implements AccessoryPlugin {
         axios
         .get(url,options)
         .then(function ({ data }: { data: Response }) {
-          log.error("Succesful get temp call")
           return callback(null, data.result[0].Temp.toString());
         })
         .catch(function (error: any) {
@@ -236,45 +235,38 @@ class ThermostatAccessory implements AccessoryPlugin {
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.TargetTemperatureIDX;
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
-          }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err && response.statusCode === 200) {
-            try {
-              json = JSON.parse(body);
-             return callback(null, parseFloat(json.result[0].SetPoint));
-            } catch (err) {
-              log.error("Invalid response reading target temp from domoticz: "+err+", is there a valid demoticz setpoint device at "+url+"?");
-              callback(new Error("invalid response"));
-            }
-          } else {
-            log.error('Error getting current target temp: '+err);
-            callback(new Error(' Error getting target temp: '+err))
-          }
-        }).bind(this));
+
+        axios
+        .get(url,options)
+        .then(function ({ data }: { data: Response }) {
+          return callback(null, data.result[0].SetPoint.toString());
+        })
+        .catch(function (error: any) {
+          log.error("Error getting target temp on "+url)
+          log.error(error.response.data);
+          log.error(error.response.status);
+          log.error(error.response.headers);
+          return callback(new Error('Error getting target temp on '+url))
+        })
+
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
         var url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=setsetpoint&idx="+this.TargetTemperatureIDX+"&setpoint="+value;
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
-          }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err && response.statusCode === 200) {
-              return callback(null);
-          } else {
-            log.error('Error setting  target temp: %s', err);
-            callback(new Error("error"));
-          }
-        }).bind(this));
+
+        axios
+        .get(url,options)
+        .then(function ({ data }: { data: Response }) {
+          log.error("Succesful set setpoint call")
+          return callback(null);
+        })
+        .catch(function (error: any) {
+          log.error("Error setting target temp on "+url)
+          log.error(error.response.data);
+          log.error(error.response.status);
+          log.error(error.response.headers);
+          return callback(new Error('Error setting target temp on '+url))
+        })
+
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TemperatureDisplayUnits)
