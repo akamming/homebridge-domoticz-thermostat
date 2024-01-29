@@ -182,6 +182,7 @@ class ThermostatAccessory implements AccessoryPlugin {
         })          
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+        log.error("set target called")
         var url="";
         if (value==hap.Characteristic.TargetHeatingCoolingState.OFF) {
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
@@ -192,26 +193,20 @@ class ThermostatAccessory implements AccessoryPlugin {
         } else if (value==hap.Characteristic.TargetHeatingCoolingState.AUTO){
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Set%20Level&level=30";
         }
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
-          }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err) {
-            if (response.statusCode === 200) {
-                return callback(null);
-            } else {
-              log.error('Invalid status code '+response.statusCode+' on '+url);
-              callback (new Error('Invalid statuscode'))
-            }
-          } else {
-            log.error('Error setting target heating state: %s', err);
-            callback(new Error('Error setting target heating state '+err))
-          }
-        }).bind(this));
+
+        axios
+        .get(url,options)
+        .then(function ({ data }: { data: Response }) {
+          log.error("Succesful call")
+          return callback(null);
+        })
+        .catch(function (error: any) {
+          log.error("Error getting target heatings state on "+url)
+          log.error(error.response.data);
+          log.error(error.response.status);
+          log.error(error.response.headers);
+          return callback(new Error('Error setting Target heating state on '+url))
+        })
       }).setProps({
         minValue: hap.Characteristic.TargetHeatingCoolingState.OFF,
         maxValue: this.TargetHeatingCoolingStateMaxValue
