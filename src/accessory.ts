@@ -94,6 +94,14 @@ class ThermostatAccessory implements AccessoryPlugin {
     if (config.password) {
       this.password=config.password;
     }
+
+    // setup authorization header
+    const options = {
+      headers: {
+        Authorization: 'Basic '+btoa(this.username+':'+this.password),
+      }
+    };
+
     this.CurrentHeatingStateIDX=config.CurrentHeatingCoolingStateIDX;
     this.TargetHeatingStateIDX=config.TargetHeatingCoolingStateIDX;
     this.CurrentTemperatureIDX=config.CurrentTemperatureIDX;
@@ -114,19 +122,12 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid=";
         if (this.CurrentHeatingStateIDX==undefined || this.CurrentHeatingStateIDX==0) {
           url+=+this.TargetHeatingStateIDX
         } else {
           url+=+this.CurrentHeatingStateIDX
         }
-
-        const options = {
-          headers: {
-            Authorization: 'Basic '+btoa(this.username+':'+this.password),
-          }
-        };
 
         axios
           .get(url,options)
@@ -153,44 +154,32 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetHeatingCoolingState)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.TargetHeatingStateIDX;
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
-          }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err) {
-            if (response.statusCode === 200) {
-              try {
-                json = JSON.parse(body);
-                if (json.result[0].Level==0){
-                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
-                } else if (json.result[0].Level==10){
-                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.HEAT);
-                } else  if (json.result[0].Level==20){
-                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.COOL);
-                } else  if (json.result[0].Level==30){
-                  return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
-                } else {
-                  log.error("Error: Unknown Target HeatingCooling State, check you domoticz switch configuration")
-                  callback(new Error('Error: unknown Target Heating Cooling State'))
-                }
-              } catch (err) {
-                log.error("Invalid domoticz reponse readomg Target Heating Cooling state: "+err+", is there a valid Domoticz selector switch at "+url+"?");
-                callback(new Error('Invalid response'));
-              }
-            } else {
-              log.error("invalid reponse code: "+response.statusCode+", on "+url)
-              callback(new Error('Invalid domoticz respons'))
-            }
+
+        axios
+        .get(url,options)
+        .then(function ({ data }: { data: Response }) {
+          if (data.result[0].Level==0){
+            return callback(null, hap.Characteristic.TargetHeatingCoolingState.OFF);
+          } else if (data.result[0].Level==10){
+            return callback(null, hap.Characteristic.TargetHeatingCoolingState.HEAT);
+          } else  if (data.result[0].Level==20){
+            return callback(null, hap.Characteristic.TargetHeatingCoolingState.COOL);
+          } else  if (data.result[0].Level==30){
+            return callback(null, hap.Characteristic.TargetHeatingCoolingState.AUTO);
           } else {
-            log.error('Error getting target heating state: ' + err);
-            callback(new Error('Error getting target heating state: '+err));
+            log.error("Error: Unknown Target HeatingCooling State, check you domoticz switch configuration")
+            callback(new Error('Error: unknown Target Heating Cooling State'))
           }
-        }).bind(this));
+        })
+        .catch(function (error: any) {
+          log.error("Error getting target heatings state on "+url)
+          log.error(error.response.data);
+          log.error(error.response.status);
+          log.error(error.response.headers);
+          return callback(new Error('Error getting target heating state on '+url))
+        })          
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
         var url="";
