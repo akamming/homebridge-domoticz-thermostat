@@ -15,7 +15,7 @@ import {
 } from "homebridge";
 import { IncomingMessage } from "http";
 // import { Http2ServerRequest } from "http2";
-import { AxiosResponse } from "axios";
+// import { AxiosResponse } from "axios";
 
 /*
  * IMPORTANT NOTICE
@@ -40,7 +40,6 @@ import { AxiosResponse } from "axios";
  * like this for example and used to access all exported variables and classes from HAP-NodeJS.
  */
 let hap: HAP;
-var request = require('request');
 var axios = require('axios');
 var btoa = require('btoa')
 
