@@ -75,7 +75,7 @@ class ThermostatAccessory implements AccessoryPlugin {
 
     // interface for reading devices
     interface Device{
-      [index: number]: { Level: Number, HardwareName: string }
+      [index: number]: { Level: Number, HardwareName: string, Temp: Number }
     };
 
     interface Response {
@@ -201,7 +201,7 @@ class ThermostatAccessory implements AccessoryPlugin {
           return callback(null);
         })
         .catch(function (error: any) {
-          log.error("Error getting target heatings state on "+url)
+          log.error("Error setting target heatings state on "+url)
           log.error(error.response.data);
           log.error(error.response.status);
           log.error(error.response.headers);
@@ -214,28 +214,23 @@ class ThermostatAccessory implements AccessoryPlugin {
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+
         var url=this.ApiAddress+":"+this.port+"/json.htm?type=command&param=getdevices&rid="+this.CurrentTemperatureIDX;
-        return request.get({
-          url: url,
-          auth: {
-            user: this.username,
-            pass: this.password
-          }
-        }, (function (err: string, response: IncomingMessage, body: string) {
-          var json;
-          if (!err && response.statusCode === 200) {
-              try {
-                json = JSON.parse(body);
-                return callback(null, json.result[0].Temp);
-              } catch(err) {
-                log.error("Invalid response reading current temperature: "+err+", is there a valid temperature domoticz sensor at "+url+"?");
-                callback(new Error("invalid response"));
-              }
-          } else {
-            log.error('Error getting current current temp: '+err);
-            callback(new Error('Error getting current temp: '+err))
-          }
-        }).bind(this));
+
+        axios
+        .get(url,options)
+        .then(function ({ data }: { data: Response }) {
+          log.error("Succesful get temp call")
+          return callback(null, data.result[0].Temp.toString());
+        })
+        .catch(function (error: any) {
+          log.error("Error getting current temp on "+url)
+          log.error(error.response.data);
+          log.error(error.response.status);
+          log.error(error.response.headers);
+          return callback(new Error('Error getting current temp on '+url))
+        })
+
       });
 
       this.ThermostatService.getCharacteristic(hap.Characteristic.TargetTemperature)
