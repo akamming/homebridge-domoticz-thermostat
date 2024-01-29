@@ -181,7 +181,6 @@ class ThermostatAccessory implements AccessoryPlugin {
         })          
       })
       .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        log.error("set target called")
         var url="";
         if (value==hap.Characteristic.TargetHeatingCoolingState.OFF) {
           url = this.ApiAddress+":"+this.port+"/json.htm?type=command&param=switchlight&idx="+this.TargetHeatingStateIDX+"&switchcmd=Off";
@@ -196,7 +195,6 @@ class ThermostatAccessory implements AccessoryPlugin {
         axios
         .get(url,options)
         .then(function ({ data }: { data: Response }) {
-          log.error("Succesful call")
           return callback(null);
         })
         .catch(function (error: any) {
@@ -255,7 +253,6 @@ class ThermostatAccessory implements AccessoryPlugin {
         axios
         .get(url,options)
         .then(function ({ data }: { data: Response }) {
-          log.error("Succesful set setpoint call")
           return callback(null);
         })
         .catch(function (error: any) {
