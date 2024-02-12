@@ -38,7 +38,9 @@ And you are in business!!
 ### Advanced Config (Multiple thermostats)
 If you want configure more than one thermostat in homebridge: this can be achieved by
 - Enable the [childbridge feature of homebridge](https://github.com/homebridge/homebridge/wiki/Child-Bridges) for this thermostat plugin
-- Manually configure the 2nd (or 3rd, etc..) thermostat directly in the json in the homebridge config in the accessories section. Here is a smple config (note that all usernames must be the same or it will not work) :
+- Manually configure the 2nd (or 3rd, etc..) thermostat directly in the json in the homebridge config in the accessories section.
+- Make sure that you reboot after the config changes
+- Here is a sample config (note that all usernames must be the same or it will not work) :
 ```
 "accessories": [
         {
