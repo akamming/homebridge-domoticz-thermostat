@@ -4,17 +4,17 @@ Homebride thermostat created from domoticz devices
 ## Why
 I built this plugin to publish my own heating solution in domoticz (https://github.com/akamming/Domoticz_Thermostate_Plugin) to homekit to have a nice interface, but i decided to make it generic, so i can reuse, or anyone can reuse it.  (e.g. it  also works on Spirit Zwave Plus or Fibaro heat controller)
 
-## how it works
+## How it works
 
-This plugin gets the status from 4 domoticz devices (of which 3 mandatory) and publishes this as 1 thermostat device in homekit. There is no heating/cooling logic in this plugin, it is only the interface to homekit, so any heating/cooling logic must be present in domotcz or the devices behind domoticz to make this work.
+This plugin retrieves the status from 4 domoticz devices (of which 3 mandatory) and publishes this as 1 thermostat device in homekit. There is no heating/cooling logic in this plugin, it is only the interface from domoticz to homekit
 
-## how to install
+## Installation
 
-### requisites
+### Requisites
 This plugin requires domoticz 2023.2 or higher
 
-### configure domoticz :
-Make sure you the following devices in domoticz representing your heating/cooling system:
+### Domoticz Configuration :
+Make sure you have the following devices in domoticz to represent your heating/cooling system:
 - a setpoint device stating the target room temperature
 - a temperature device stating your current room temperature 
 - (optional): a selector switch which indicates your current heating/cooling state, configure the selector options like below:
@@ -23,22 +23,22 @@ Make sure you the following devices in domoticz representing your heating/coolin
 ![image](https://user-images.githubusercontent.com/30364409/177097341-ca534b92-17bd-4fcf-8ead-f136ed32a307.png)
 - make sure you have some mechanisme in domoticz which controls your heating/cooling based on these 4 devices. 
 
-If you use the above mentioned domoticz plugin, or if you are using a fibaro heat controller, or a eurotronic spirit zwaveplus, these devices will automatically be created for you in domoticz)
+If you use the domoticz plugin mentioned above, or if you are using a fibaro heat controller, or a eurotronic spirit zwaveplus, these devices will automatically be created for you in domoticz)
 
-### install the plugin
+### Plugin installation
 - if you are new to homebdrige, follow the instructions on https://homebridge.io/ to install a homebridge instance 
 - login to homebridge
 - go to the plugins tab
 - in the search bar: enter "domoticz thermostat"  and press enter
 - install this plugin (it is called Homebridge-Domoticz-Thermostat)
-- Enter your domoticz api adress and port, a domoticz user and password and the 4 device numbers of the domoticz devices mentioned above
+- Enter your domoticz api adress and port, a domoticz user and password and the 4 device numbers of the domoticz devices representing your heating system
 - Restart homebridge
 And you are in business!!
 
-### advanced
+### Advanced Config (Multiple thermostats)
 If you want configure more than one thermostat in homebridge: this can be achieved by
-- Enable the [childbridge feature of homebridge](https://github.com/homebridge/homebridge/wiki/Child-Bridges) 
-- Manually configure the 2nd (or 3rd, etc..) thermostat directly in the json in the homebridge config in the accessories section. Here is a smple config (not that all usernames must be the same or it will not work) :
+- Enable the [childbridge feature of homebridge](https://github.com/homebridge/homebridge/wiki/Child-Bridges) for this thermostat plugin
+- Manually configure the 2nd (or 3rd, etc..) thermostat directly in the json in the homebridge config in the accessories section. Here is a smple config (note that all usernames must be the same or it will not work) :
 ```
 "accessories": [
         {
