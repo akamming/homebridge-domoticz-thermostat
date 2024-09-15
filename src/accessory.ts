@@ -114,7 +114,7 @@ class ThermostatAccessory implements AccessoryPlugin {
     } else {
       this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
     }
-    this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
+    // this.TargetHeatingCoolingStateMaxValue=hap.Characteristic.TargetHeatingCoolingState.HEAT;
     log.info("Target Heating Cooling State Max Value is "+this.TargetHeatingCoolingStateMaxValue);
  
     this.ThermostatService = new hap.Service.Thermostat(this.name);
